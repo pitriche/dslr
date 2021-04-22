@@ -6,7 +6,7 @@
 #    By: brunomartin <brunomartin@student.42.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/02/07 14:21:44 by pitriche          #+#    #+#              #
-#    Updated: 2021/04/22 09:05:39 by brunomartin      ###   ########.fr        #
+#    Updated: 2021/04/22 16:13:52 by brunomartin      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -19,78 +19,102 @@ MAGENTA	= \033[035m
 CYAN	= \033[036m
 RESET	= \033[0m
 
-# **************************************************************************** #
+# TRAIN ********************************************************************** #
 
-NAME = dslr
+NAME_TRAIN = logreg_train
 
-SUBFOLDERS = \
-
-CLASSES=	\
-
-
-SUBFOLDERS_OBJ= $(addprefix $(OBJ_DIR), $(SUBFOLDERS))
-SUBFOLDERS_INCLUDE= $(addprefix $(INCLUDE_DIR), $(SUBFOLDERS))
-
-CLASSES_HEADERS= $(addsuffix .hpp, $(CLASSES))
-CLASSES_SRCS= $(addsuffix .cpp, $(CLASSES))
-
-HEADERS = $(CLASSES_HEADERS) \
-Vec3d.hpp		\
-
-SRC_FILES = $(CLASSES_SRCS)	\
+SRC_FILES_TRAIN = \
 main.cpp		\
 
 
+SRC_DIR_TRAIN = src_train/
+SRC_TRAIN := $(addprefix $(SRC_DIR_TRAIN), $(SRC_FILES_TRAIN))
+
+OBJ_FILES_TRAIN = $(patsubst %.cpp, %.o, $(SRC_FILES_TRAIN))
+OBJ_DIR_TRAIN = obj_train/
+OBJ_TRAIN := $(addprefix $(OBJ_DIR_TRAIN), $(OBJ_FILES_TRAIN))
+
+# EXECUTE ******************************************************************** #
+
+NAME_EXECUTE = logreg_execute
+
+SRC_FILES_EXECUTE = \
+main.cpp		\
+
+
+SRC_DIR_EXECUTE = src_execute/
+SRC_EXECUTE := $(addprefix $(SRC_DIR_EXECUTE), $(SRC_FILES_EXECUTE))
+
+OBJ_FILES_EXECUTE = $(patsubst %.cpp, %.o, $(SRC_FILES_EXECUTE))
+OBJ_DIR_EXECUTE = obj_execute/
+OBJ_EXECUTE := $(addprefix $(OBJ_DIR_EXECUTE), $(OBJ_FILES_EXECUTE))
+
 # **************************************************************************** #
+
+HEADERS = \
+# \
+Tuple.hpp		\
+DataPack.hpp	\
 
 CC = clang++
 
 FL_OPTI = -O3 -flto
-FLAGS = -Wall -Wextra -Wconversion -Wuninitialized -Wunused -std=c++98 $(FL_OPTI)
+FLAGS = -Wall -Wextra -Wconversion -Wuninitialized -Wunused -std=c++11 $(FL_OPTI)
 CFLAGS = -c $(FLAGS)
 
-PWD = $(shell pwd)
-SDL_DIR = frameworks
-FRAMEWORKS = -F $(SDL_DIR) -framework SDL2 -Wl,-rpath $(SDL_DIR)
-
-CINCLUDE = -I include -I frameworks/SDL2.framework/headers \
-$(addprefix -I , $(SUBFOLDERS_INCLUDE))
-
-SRC_DIR = src/
-SRC := $(addprefix $(SRC_DIR), $(SRC_FILES))
+CINCLUDE = -I include
 
 INCLUDE_DIR = include/
 INCLUDE := $(addprefix $(INCLUDE_DIR), $(HEADERS))
 
-OBJ_FILES = $(patsubst %.cpp, %.o, $(SRC_FILES))
-OBJ_DIR = obj/
-OBJ := $(addprefix $(OBJ_DIR), $(OBJ_FILES))
+all: $(NAME_TRAIN) $(NAME_EXECUTE)
+	@echo "$(CYAN)DSLR ready sir !$(RESET)"
 
-all: $(NAME)
-	@echo "$(CYAN)$(NAME) ready sir !$(RESET)"
+# linking (park)
+$(NAME_TRAIN): $(OBJ_DIR_TRAIN) $(OBJ_TRAIN)
+	@echo "$(GREEN)train objects compiled sir !$(RESET)"
+	@$(CC) $(FL_OPTI) -o $(NAME_TRAIN) $(OBJ_TRAIN)
+	@echo "$(GREEN)$(NAME) linked sir !$(RESET)"
 
-$(NAME): $(LIB) $(OBJ_DIR) $(OBJ)
-	@echo "$(GREEN)objects done sir !$(RESET)"
-	@$(CC) $(FRAMEWORKS) $(LFLAGS) -o $(NAME) $(OBJ)
-	@echo "$(GREEN)$(NAME) compiled sir !$(RESET)"
+$(NAME_EXECUTE): $(OBJ_DIR_EXECUTE) $(OBJ_EXECUTE)
+	@echo "$(GREEN)execute objects compiled sir !$(RESET)"
+	@$(CC) $(FL_OPTI) -o $(NAME_EXECUTE) $(OBJ_EXECUTE)
+	@echo "$(GREEN)$(NAME) linked sir !$(RESET)"
 
-$(OBJ_DIR)%.o : $(SRC_DIR)%.cpp $(INCLUDE)
+
+# compiling
+$(OBJ_DIR_TRAIN)%.o : $(SRC_DIR_TRAIN)%.cpp $(INCLUDE)
 	@$(CC) $(CINCLUDE) $(CFLAGS) -o $@ $<
 	@echo -n '.'
 
-$(OBJ_DIR) :
-	@mkdir $(OBJ_DIR)
-	@mkdir $(SUBFOLDERS_OBJ)
+$(OBJ_DIR_EXECUTE)%.o : $(SRC_DIR_EXECUTE)%.cpp $(INCLUDE)
+	@$(CC) $(CINCLUDE) $(CFLAGS) -o $@ $<
+	@echo -n '.'
+
+
+$(OBJ_DIR_TRAIN) :
+	@mkdir $(OBJ_DIR_TRAIN)
 	@echo "$(GREEN)Object directory created sir !$(RESET)"
 
+$(OBJ_DIR_EXECUTE) :
+	@mkdir $(OBJ_DIR_EXECUTE)
+	@echo "$(GREEN)Object directory created sir !$(RESET)"
+
+
 clean:
-	@rm -f $(OBJ)
+	@rm -f $(OBJ_TRAIN)
+	@rm -f $(OBJ_EXECUTE)
 	@echo "$(RED)Objects deleted sir !$(RESET)"
-	@rm -rf $(OBJ_DIR)
+	@rm -rf $(OBJ_DIR_TRAIN)
+	@rm -rf $(OBJ_DIR_EXECUTE)
 	@#echo "$(RED)Object directory deleted sir !$(RESET)"
 
 fclean: clean
-	@rm -f $(NAME)
-	@echo "$(RED)$(NAME) deleted sir !$(RESET)"
+	@rm -f $(NAME_TRAIN)
+	@rm -f $(NAME_EXECUTE)
+	@echo "$(RED)$(NAME_TRAIN) deleted sir !$(RESET)"
+	@echo "$(RED)$(NAME_EXECUTE) deleted sir !$(RESET)"
 
 re: fclean all
+
+.PHONY: all fclean clean re
