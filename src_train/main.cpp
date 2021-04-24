@@ -6,7 +6,7 @@
 /*   By: brunomartin <brunomartin@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/04/22 15:14:08 by pitriche          #+#    #+#             */
-/*   Updated: 2021/04/22 20:22:00 by brunomartin      ###   ########.fr       */
+/*   Updated: 2021/04/24 22:15:00 by brunomartin      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,10 @@ int	main(int ac, char **av)
 		std::cout << "Impossible to open file" << std::endl;
 		return (0);
 	}
-	dp.parse(ifs);
+	try { dp.parse(ifs); }
+	catch (std::exception &e) { return (0); }
+	// dp.correct();
+	dp.dataset = dp.normallize();
+	dp.correct();
 	return (0);
 }
