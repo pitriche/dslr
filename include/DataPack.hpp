@@ -16,11 +16,12 @@
 #include <array>
 #include <string>
 #include <cmath>
+#include <cstdlib>
 
 
 typedef	float	real_t;	// real type to use everywhere
 
-#define TUPLE_SIZE 15
+#define TUPLE_SIZE 9
 typedef std::array<real_t, TUPLE_SIZE>	Tuple;
 
 struct DataPack
@@ -30,20 +31,30 @@ struct DataPack
 
 
 		DataPack(void) { }
+		DataPack(std::vector<Tuple> dataset_) : dataset(dataset_) { }
 		~DataPack(void) { }
 
 		// parse input stream to gather the data
-		void					parse(std::istream &is);
+		void		parse(std::istream &is);
 		
 		// correct missing data
-		void					correct(void);
+		void		correct(void);
 
-		// return a copy of the data, normalized
-		std::vector<Tuple>		normallize(void);
+		// normalize the data
+		void		normalize(void);
+
+		// split the data randomly
+		DataPack	split(double ratio);
 
 		// return the data randomly separated in batches
 		void	batch(std::vector<std::vector<Tuple> > &batches, unsigned
 			batch_size) const;
+
+		DataPack &operator=(const DataPack &rhs)
+		{
+			this->dataset = rhs.dataset;
+			return (*this);
+		}
 };
 
 // #############################################################################
@@ -54,9 +65,11 @@ static Tuple	_parse_example(std::string &line)
 	std::stringstream	sst;
 	std::string			tmp;
 	unsigned			element;
+	unsigned			feature_tup;
 
 	sst.str(line);
 	element = 0;
+	feature_tup = 1;
 	while (sst.good())
 	{
 		tmp.clear();
@@ -74,14 +87,14 @@ static Tuple	_parse_example(std::string &line)
 			else
 				throw std::logic_error("Invalid house : >" + tmp + "<");
 		}
-		if (element == 5)
-			tup[1] = tmp == "Right" ? (real_t)1.0f : (real_t)0.0f;
-		else if (element >= 6)
+		else if (element >= 7 && element != 9 && element != 15 &&
+			element != 16 && element != 17)	// select only useful features
+											// 15 and 17 can be added
 		{
 			if (!tmp.empty())
-				tup[element - 4] = (real_t)std::stold(tmp);
+				tup[feature_tup++] = (real_t)std::stold(tmp);
 			else
-				tup[element - 4] = NAN;
+				tup[feature_tup++] = NAN;
 		}
 		element++;
 	}
@@ -112,55 +125,59 @@ void	DataPack::parse(std::istream &is)
 	std::endl;
 }
 
+// #############################################################################
+
 void	DataPack::correct(void)
 {
-	Tuple		type[4]; // storing the amount of this type's data at index 0
+	Tuple		sum[4];
+	Tuple		number[4];	// number of each features not NaN
 	unsigned	type_id;
 
-	for (unsigned i = 0; i < TUPLE_SIZE; ++i)
+	for (unsigned i = 0; i < 4; ++i) // zero fill the arrays
 	{
-		type[0][i] = static_cast<real_t>(0);
-		type[1][i] = static_cast<real_t>(0);
-		type[2][i] = static_cast<real_t>(0);
-		type[3][i] = static_cast<real_t>(0);
+		sum[i].fill(0.0);
+		number[i].fill(0.0);
 	}
 	for (auto &example : this->dataset)
 	{
 		type_id = (unsigned)example[0];
-		type[type_id][0]++;
 		for (unsigned feature = 1; feature < TUPLE_SIZE; ++feature)
 			if (!std::isnan(example[feature]))
-				type[type_id][feature] += example[feature];
+			{
+				number[type_id][feature]++;
+				sum[type_id][feature] += example[feature];
+			}
 	}
 	for (unsigned i = 1; i < TUPLE_SIZE; ++i)
 	{
-		type[0][i] /= type[0][0];
-		type[1][i] /= type[1][0];
-		type[2][i] /= type[2][0];
-		type[3][i] /= type[3][0];
+		sum[0][i] /= number[0][i];
+		sum[1][i] /= number[1][i];
+		sum[2][i] /= number[2][i];
+		sum[3][i] /= number[3][i];
 	}
 	for (auto &example : this->dataset)
 	{
 		type_id = (unsigned)example[0];
 		for (unsigned feature = 1; feature < TUPLE_SIZE; ++feature)
 			if (std::isnan(example[feature]))
-				example[feature] = type[type_id][feature];
+				example[feature] = sum[type_id][feature];
 	}
-	for (unsigned i = 1; i < TUPLE_SIZE; ++i)
-	{
-		std::cout << "feature: " << i << std::endl;
-		std::cout << "type 0>" << type[0][i] << "\t";
-		std::cout << "type 1>" << type[1][i] << "\t";
-		std::cout << "type 2>" << type[2][i] << "\t";
-		std::cout << "type 3>" << type[3][i] << std::endl << std::endl;
-	}
+	// for (unsigned i = 1; i < TUPLE_SIZE; ++i)
+	// {
+	// 	std::cout << "feature: " << i << "\t";
+	// 	std::cout << "type 0>" << sum[0][i] << "\t";
+	// 	std::cout << "type 1>" << sum[1][i] << "\t";
+	// 	std::cout << "type 2>" << sum[2][i] << "\t";
+	// 	std::cout << "type 3>" << sum[3][i] << std::endl;
+	// }
 }
 
-std::vector<Tuple>	DataPack::normallize(void)
+// #############################################################################
+
+void	DataPack::normalize(void)
 {
-	std::vector<Tuple>	norm;
-	Tuple				min;
-	Tuple				max;
+	Tuple		min;
+	Tuple		max;
 
 	for (unsigned feature = 1; feature < TUPLE_SIZE; ++feature)
 	{
@@ -175,13 +192,29 @@ std::vector<Tuple>	DataPack::normallize(void)
 			if (example[feature] > max[feature])
 				max[feature] = example[feature];
 		}
-	norm = this->dataset;
-	for (auto &example : norm)
+	for (auto &example : this->dataset)
 		for (unsigned feature = 1; feature < TUPLE_SIZE; ++feature)
 		{
 			example[feature] -= min[feature];
 			example[feature] /= max[feature] - min[feature];
 		}
-	
-	return (norm);
+}
+
+// #############################################################################
+
+DataPack	DataPack::split(double ratio)
+{
+	DataPack		pack;
+	unsigned		pack_size;
+	size_t			swap_id;
+
+	pack_size = static_cast<unsigned>(ratio *
+		static_cast<double>(this->dataset.size()));
+	for (unsigned i = 0; i < pack_size; ++i)
+	{
+		swap_id = std::rand() % this->dataset.size();
+		pack.dataset.push_back(this->dataset[swap_id]);
+		this->dataset.erase(this->dataset.begin() + swap_id);
+	}
+	return (pack);
 }
