@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: brunomartin <brunomartin@student.42.fr>    +#+  +:+       +#+        */
+/*   By: user42 <user42@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/04/22 15:14:08 by pitriche          #+#    #+#             */
-/*   Updated: 2021/05/04 16:38:55 by brunomartin      ###   ########.fr       */
+/*   Updated: 2021/05/04 20:08:27 by user42           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <climits>
 
 #include "DataPack.hpp"
 
@@ -120,7 +121,7 @@ static void	train_linreg(const DataPack &train, const DataPack &test)
 		// initialize the weights
 		// theta_types[type].fill(0);
 		for (real_t &weight : theta_types[type])
-			weight = 1.0f - (std::rand() / (real_t)INT_MAX) * 2;
+			weight = 1.0f - ((real_t)std::rand() / (real_t)INT_MAX) * 2;
 		
 		min_cost = INFINITY;
 		for (epoch = 0; epoch < TRAIN_CYCLES; ++epoch)
