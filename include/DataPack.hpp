@@ -6,7 +6,7 @@
 /*   By: brunomartin <brunomartin@student.42.fr>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/04/22 16:04:13 by pitriche          #+#    #+#             */
-/*   Updated: 2021/04/24 22:14:11 by brunomartin      ###   ########.fr       */
+/*   Updated: 2021/05/04 16:37:02 by brunomartin      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 #include <cstdlib>
 
 
-typedef	float	real_t;	// real type to use everywhere
+typedef	float real_t;	// real type to use everywhere
 
 #define TUPLE_SIZE 9
 typedef std::array<real_t, TUPLE_SIZE>	Tuple;
@@ -35,20 +35,20 @@ struct DataPack
 		~DataPack(void) { }
 
 		// parse input stream to gather the data
-		void		parse(std::istream &is);
+		void		parse(std::istream &is, bool is_test);
 		
+
 		// correct missing data
-		void		correct(void);
+		void		purge(void);		// by purging it
+		// by mean substitution
+		void		correct(void);		// from data type mean
+		void		test_correct(void); // from general mean
 
 		// normalize the data
 		void		normalize(void);
 
-		// split the data randomly
+		// split the data in 2 sets randomly
 		DataPack	split(double ratio);
-
-		// return the data randomly separated in batches
-		void	batch(std::vector<std::vector<Tuple> > &batches, unsigned
-			batch_size) const;
 
 		DataPack &operator=(const DataPack &rhs)
 		{
@@ -59,7 +59,7 @@ struct DataPack
 
 // #############################################################################
 
-static Tuple	_parse_example(std::string &line)
+static Tuple	_parse_example(std::string &line, bool is_test)
 {
 	Tuple				tup;
 	std::stringstream	sst;
@@ -74,7 +74,9 @@ static Tuple	_parse_example(std::string &line)
 	{
 		tmp.clear();
 		std::getline(sst, tmp, ',');
-		if (element == 1)
+		if (element == 0 )
+			tup[0] = (real_t)std::stold(tmp);
+		if (element == 1 && !is_test)
 		{
 			if (tmp == "Gryffindor")
 				tup[0] = 0.0f;
@@ -103,7 +105,7 @@ static Tuple	_parse_example(std::string &line)
 	return (tup);
 }
 
-void	DataPack::parse(std::istream &is)
+void	DataPack::parse(std::istream &is, bool is_test)
 {
 	std::string			tmp;
 
@@ -113,19 +115,66 @@ void	DataPack::parse(std::istream &is)
 		std::getline(is, tmp);
 		if (tmp.empty()) // skip empty lines including the last one
 			continue ;
-		try { this->dataset.push_back(_parse_example(tmp)); }
+		try { this->dataset.push_back(_parse_example(tmp, is_test)); }
 		catch (std::exception &e)
 		{
 			std::cerr << "Parsing failed: " << e.what() << std::endl;
 			throw e;
 		}
-
 	}
 	std::cout << "There are " << dataset.size() << " elements in dataset" <<
 	std::endl;
 }
 
 // #############################################################################
+
+void	DataPack::purge(void) // don't make me use this please
+{
+	auto 		it = this->dataset.begin();
+	unsigned	purged;
+	
+	purged = 0;
+	while (it != this->dataset.end())
+	{
+		for (unsigned feature = 1; feature < TUPLE_SIZE; ++feature)
+			if (std::isnan((*it)[feature]))
+			{
+				this->dataset.erase(it);
+				++purged;
+				--it;
+				break ;
+			}
+		++it;
+	}
+	std::cout << "Purged " << purged << std::endl;
+}
+
+
+void	DataPack::test_correct(void)
+{
+	Tuple		sum;
+	Tuple		number;	// number of each features not NaN
+
+	sum.fill(0.0f);
+	number.fill(0.0f);
+	for (auto &example : this->dataset)
+	{
+		for (unsigned feature = 1; feature < TUPLE_SIZE; ++feature)
+			if (!std::isnan(example[feature]))
+			{
+				number[feature]++;
+				sum[feature] += example[feature];
+			}
+	}
+	for (unsigned i = 1; i < TUPLE_SIZE; ++i)
+		sum[i] /= number[i];
+	for (auto &example : this->dataset)
+	{
+		for (unsigned feature = 1; feature < TUPLE_SIZE; ++feature)
+			if (std::isnan(example[feature]))
+				example[feature] = sum[feature];
+	}
+}
 
 void	DataPack::correct(void)
 {
@@ -162,14 +211,6 @@ void	DataPack::correct(void)
 			if (std::isnan(example[feature]))
 				example[feature] = sum[type_id][feature];
 	}
-	// for (unsigned i = 1; i < TUPLE_SIZE; ++i)
-	// {
-	// 	std::cout << "feature: " << i << "\t";
-	// 	std::cout << "type 0>" << sum[0][i] << "\t";
-	// 	std::cout << "type 1>" << sum[1][i] << "\t";
-	// 	std::cout << "type 2>" << sum[2][i] << "\t";
-	// 	std::cout << "type 3>" << sum[3][i] << std::endl;
-	// }
 }
 
 // #############################################################################
@@ -212,9 +253,9 @@ DataPack	DataPack::split(double ratio)
 		static_cast<double>(this->dataset.size()));
 	for (unsigned i = 0; i < pack_size; ++i)
 	{
-		swap_id = std::rand() % this->dataset.size();
+		swap_id = (size_t)std::rand() % this->dataset.size();
 		pack.dataset.push_back(this->dataset[swap_id]);
-		this->dataset.erase(this->dataset.begin() + swap_id);
+		this->dataset.erase(this->dataset.begin() + (long)swap_id);
 	}
 	return (pack);
 }

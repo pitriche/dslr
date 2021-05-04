@@ -6,7 +6,7 @@
 #    By: brunomartin <brunomartin@student.42.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/02/07 14:21:44 by pitriche          #+#    #+#              #
-#    Updated: 2021/04/22 16:13:52 by brunomartin      ###   ########.fr        #
+#    Updated: 2021/05/03 10:54:24 by brunomartin      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -95,52 +95,52 @@ $(OBJ_DIR_EXECUTE)%.o : $(SRC_DIR_EXECUTE)%.cpp $(INCLUDE)
 
 
 # unix
-#clean:
-#	@rm -f $(OBJ_TRAIN)
-#	@rm -f $(OBJ_EXECUTE)
-#	@echo "$(RED)Objects deleted sir !$(RESET)"
-#	@rm -rf $(OBJ_DIR_TRAIN)
-#	@rm -rf $(OBJ_DIR_EXECUTE)
-#	@#echo "$(RED)Object directory deleted sir !$(RESET)"
-#
-#fclean: clean
-#	@rm -f $(NAME_TRAIN)
-#	@rm -f $(NAME_EXECUTE)
-#	@echo "$(RED)$(NAME_TRAIN) deleted sir !$(RESET)"
-#	@echo "$(RED)$(NAME_EXECUTE) deleted sir !$(RESET)"
-#
-#$(OBJ_DIR_TRAIN) :
-#	@mkdir $(OBJ_DIR_TRAIN)
-#	@echo "$(GREEN)Object directory created sir !$(RESET)"
-#
-#$(OBJ_DIR_EXECUTE) :
-#	@mkdir $(OBJ_DIR_EXECUTE)
-#	@echo "$(GREEN)Object directory created sir !$(RESET)"
+clean:
+	@rm -f $(OBJ_TRAIN)
+	@rm -f $(OBJ_EXECUTE)
+	@echo "$(RED)Objects deleted sir !$(RESET)"
+	@rm -rf $(OBJ_DIR_TRAIN)
+	@rm -rf $(OBJ_DIR_EXECUTE)
+	@#echo "$(RED)Object directory deleted sir !$(RESET)"
+
+fclean: clean
+	@rm -f $(NAME_TRAIN)
+	@rm -f $(NAME_EXECUTE)
+	@echo "$(RED)$(NAME_TRAIN) deleted sir !$(RESET)"
+	@echo "$(RED)$(NAME_EXECUTE) deleted sir !$(RESET)"
+
+$(OBJ_DIR_TRAIN) :
+	@mkdir $(OBJ_DIR_TRAIN)
+	@echo "$(GREEN)Object directory created sir !$(RESET)"
+
+$(OBJ_DIR_EXECUTE) :
+	@mkdir $(OBJ_DIR_EXECUTE)
+	@echo "$(GREEN)Object directory created sir !$(RESET)"
 
 
 
 # windows
-clean:
-	@rmdir /s /q obj_train
-	@rmdir /s /q obj_execute
-	@echo Objects deleted sir !
-	@echo Object directory deleted sir !
-# spacers
+#clean:
+#	@rmdir /s /q obj_train
+#	@rmdir /s /q obj_execute
+#	@echo Objects deleted sir !
+#	@echo Object directory deleted sir !
+## spacers
+##
 #
-
-fclean: clean
-	@del /f $(NAME_TRAIN).exe
-	@del /f $(NAME_EXECUTE).exe
-	@echo $(NAME_TRAIN) deleted sir !
-	@echo $(NAME_EXECUTE) deleted sir !
-
-$(OBJ_DIR_TRAIN) :
-	@mkdir obj_train
-	@echo Object directory created sir !
-
-$(OBJ_DIR_EXECUTE) :
-	@mkdir obj_execute
-	@echo Object directory created sir !
+#fclean: clean
+#	@del /f $(NAME_TRAIN).exe
+#	@del /f $(NAME_EXECUTE).exe
+#	@echo $(NAME_TRAIN) deleted sir !
+#	@echo $(NAME_EXECUTE) deleted sir !
+#
+#$(OBJ_DIR_TRAIN) :
+#	@mkdir obj_train
+#	@echo Object directory created sir !
+#
+#$(OBJ_DIR_EXECUTE) :
+#	@mkdir obj_execute
+#	@echo Object directory created sir !
 
 
 
